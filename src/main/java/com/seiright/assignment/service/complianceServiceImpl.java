@@ -11,6 +11,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import static com.seiright.assignment.constant.complianceConstants.NO_RESPONSE;
+import static com.seiright.assignment.constant.complianceConstants.POLICY_STRIPE;
+
 
 @Service
 public class complianceServiceImpl implements ComplianceService {
@@ -33,22 +36,25 @@ public class complianceServiceImpl implements ComplianceService {
     public String complianceCheck(String compliancePolicy, String websiteToBeChecked) {
 
 
-
-        String prompt = "Apply the compliance policy  "+ compliancePolicy + " on this piece of text for compliance checks "+ fetchWebPageData(websiteToBeChecked);
+        compliancePolicy = POLICY_STRIPE;
+        String prompt = "Apply the compliance policy  "+ compliancePolicy + " on this piece of text for compliance checks "
+                + fetchWebPageData(websiteToBeChecked) + ". Give the suggestions in points";
 
         String result = chat(prompt);
         return result;
     }
 
     public String chat(String prompt) {
+
         // create a request
         ChatRequest request = new ChatRequest(model, prompt);
         request.setN(1);
-        // call the API
+
+        // call the openAI api
         ChatResponse response = restTemplate.postForObject(apiUrl, request, ChatResponse.class);
 
         if (response == null || response.getChoices() == null || response.getChoices().isEmpty()) {
-            return "No response";
+            return NO_RESPONSE;
         }
 
         // return the first response
@@ -58,9 +64,9 @@ public class complianceServiceImpl implements ComplianceService {
     public String fetchWebPageData(String url) {
 
         // Fetch HTML content
-        String htmlContent = restTemplate.getForObject(url, String.class);
+        String htmlContent = restTemplateWebpage.getForObject(url, String.class);
 
-        // Parse HTML using Jsoup
+        // Parse HTML
         Document document = Jsoup.parse(htmlContent);
 
         // Remove images from the parsed HTML
