@@ -4,15 +4,16 @@ package com.seiright.assignment.service;
 import com.seiright.assignment.dto.ChatRequest;
 import com.seiright.assignment.dto.ChatResponse;
 import org.jsoup.Jsoup;
+import org.jsoup.internal.StringUtil;
 import org.jsoup.nodes.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-
-import static com.seiright.assignment.constant.complianceConstants.NO_RESPONSE;
-import static com.seiright.assignment.constant.complianceConstants.POLICY_STRIPE;
+import org.apache.commons.lang3.StringUtils;
+import static com.seiright.assignment.constants.loginConstants.PASSWORD;
+import static com.seiright.assignment.constants.loginConstants.USERNAME;
 
 
 @Service
@@ -36,25 +37,33 @@ public class complianceServiceImpl implements ComplianceService {
     public String complianceCheck(String compliancePolicy, String websiteToBeChecked) {
 
 
-        compliancePolicy = POLICY_STRIPE;
-        String prompt = "Apply the compliance policy  "+ compliancePolicy + " on this piece of text for compliance checks "
-                + fetchWebPageData(websiteToBeChecked) + ". Give the suggestions in points";
 
+//        String prompt = "Apply the compliance policy  "+ compliancePolicy + " on this piece of text for compliance checks "+ fetchWebPageData(websiteToBeChecked);
+        String prompt = compliancePolicy;
         String result = chat(prompt);
         return result;
     }
 
-    public String chat(String prompt) {
+    @Override
+    public Boolean login(String username, String password) {
 
+
+
+        if(StringUtils.equals(username,USERNAME)&&StringUtils.equals(password,PASSWORD))
+            return  true;
+
+        return false;
+    }
+
+    public String chat(String prompt) {
         // create a request
         ChatRequest request = new ChatRequest(model, prompt);
         request.setN(1);
-
-        // call the openAI api
+        // call the API
         ChatResponse response = restTemplate.postForObject(apiUrl, request, ChatResponse.class);
 
         if (response == null || response.getChoices() == null || response.getChoices().isEmpty()) {
-            return NO_RESPONSE;
+            return "No response";
         }
 
         // return the first response
@@ -64,9 +73,9 @@ public class complianceServiceImpl implements ComplianceService {
     public String fetchWebPageData(String url) {
 
         // Fetch HTML content
-        String htmlContent = restTemplateWebpage.getForObject(url, String.class);
+        String htmlContent = restTemplate.getForObject(url, String.class);
 
-        // Parse HTML
+        // Parse HTML using Jsoup
         Document document = Jsoup.parse(htmlContent);
 
         // Remove images from the parsed HTML

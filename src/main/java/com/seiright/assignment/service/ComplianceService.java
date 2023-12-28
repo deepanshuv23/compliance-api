@@ -4,4 +4,5 @@ public interface ComplianceService {
 
     String complianceCheck(String compliancePolicy,String websiteToBeChecked);
 
+    Boolean login(String username, String password);
 }
